@@ -1,14 +1,10 @@
 /* eslint-disable no-useless-catch */
 require("dotenv").config();
-
 const express = require("express");
 const router = express.Router();
-
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = process.env;
-
 const bcrypt = require("bcrypt");
-
 const {
   createUser,
   getUserByUsername,
@@ -21,28 +17,22 @@ const {
 // POST /api/users/register
 router.post("/register", async (req, res, next) => {
   const { username, password } = req.body;
-
-  try {
+  try 
+  {
     const _user = await getUserByUsername(username);
-
     if (_user) {
-      res.send({
-        error: "UserExistsError",
-        message: `User ${username} is already taken.`,
-        name: "UsernameExists",
+      return next({
+        name: 'UserExistsError',
+        message: `User ${_user.username} is already taken.`,
       });
     }
-
     if (password.length < 8) {
-      res.send({
-        error: "PasswordLengthError",
-        message: "Password Too Short!",
-        name: "Short Password",
-      });
-    }
-
+    return next({
+      name: 'MissingCredentialsError',
+      message: 'Password Too Short!',
+    });
+  }
     const user = await createUser({ username, password });
-
     const token = jwt.sign(
       {
         id: user.id,
@@ -51,12 +41,13 @@ router.post("/register", async (req, res, next) => {
       process.env.JWT_SECRET
     );
 
-    res.send({
+    res.status(200).json({
       message: "thank you for signing up",
       token,
       user,
     });
-  } catch (error) {
+  } catch (error) 
+  {
     next(error);
   }
 });
@@ -64,30 +55,32 @@ router.post("/register", async (req, res, next) => {
 // POST /api/users/login
 router.post("/login", async (req, res, next) => {
   const { username, password } = req.body;
-
-  if (!username || !password) {
-    res.send({
+  if (!username || !password) 
+  {
+    return next({
       error: "MissingCredentialsError",
-      name: "MissingCredentialsError",
+      name: "Error",
       message: "Please supply both a username and password",
     });
   }
 
-  try {
+  try 
+  {
     const user = await getUser({ username, password });
-
     const token = jwt.sign({ id: user.id, username }, process.env.JWT_SECRET);
-
-    if (user) {
-      res.send({ message: "you're logged in!", token, user });
-    } else {
-      res.send({
+    if (user) 
+    {
+      res.status(200).json({ message: "you're logged in!", token, user });
+    } else 
+    {
+      return next({
         error: "IncorrectCredentialsError",
-        name: "IncorrectCredentialsError",
+        name: "Error",
         message: "Username or password is incorrect",
       });
     }
-  } catch (error) {
+  } catch (error) 
+  {
     next(error);
   }
 });
@@ -96,25 +89,24 @@ router.post("/login", async (req, res, next) => {
 router.get("/me", async (req, res, next) => {
   const prefix = "Bearer ";
   const auth = req.headers.authorization;
-
-  if (!auth) {
+  if (!auth) 
+  {
     res.status(401).send({
       error: "GetUserError",
-      name: "UnauthorizedError",
+      name: "Error",
       message: "You must be logged in to perform this action",
     });
   }
-
-  if (auth) {
-    try {
+  if (auth) 
+  {
+    try 
+    {
       const token = auth.slice(prefix.length);
-
       const { id } = jwt.verify(token, process.env.JWT_SECRET);
-
       const user = await getUserById(id);
-
-      res.send(user);
-    } catch (error) {
+      res.status(200).json(user);
+    } catch (error) 
+    {
       next(error);
     }
   }
@@ -122,18 +114,20 @@ router.get("/me", async (req, res, next) => {
 
 // GET /api/users/:username/routines
 router.get("/:username/routines", async (req, res, next) => {
-  const { username } = req.params;
-  // console.log(req.user);
-  // console.log(username);
-  try {
-    if (req.user.username === username) {
+  const { username } = req.params; 
+  try 
+  {
+    if (req.user.username === username) 
+    {
       const routines = await getAllRoutinesByUser({ username });
-      res.send(routines);
-    } else {
+      res.status(200).json(routines);
+    } else 
+    {
       const publicRoutine = await getPublicRoutinesByUser({ username });
-      res.send(publicRoutine);
+      res.status(200).json(publicRoutine);
     }
-  } catch (error) {
+  } catch (error) 
+  {
     next(error);
   }
 });
