@@ -18,12 +18,12 @@ router.patch("/:routineActivityId", requireUser, async (req, res, next) => {
   try 
   {
     const routineActivity = await getRoutineActivityById(routineActivityId);
-    const isOwner = await canEditRoutineActivity(
+    const isTheOwner = await canEditRoutineActivity(
       routineActivityId,
       req.user.id
     );
 
-    if (!isOwner) 
+    if (!isTheOwner) 
     {
       next({
         name: 'AuthorizationHeaderError',
@@ -52,12 +52,12 @@ router.delete("/:routineActivityId", requireUser, async (req, res, next) => {
   try 
   {
     const routineActivity = await getRoutineActivityById(routineActivityId);
-   const isOwner = await canEditRoutineActivity(
+   const isTheOwner = await canEditRoutineActivity(
         routineActivityId,
         req.user.id
       );
 
-      if (!isOwner) 
+      if (!isTheOwner) 
       {
         res.status(403).json({
           error: 'AuthorizationHeaderError',
