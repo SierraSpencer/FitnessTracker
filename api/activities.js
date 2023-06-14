@@ -24,7 +24,7 @@ router.get("/:activityId/routines", async (req, res, next) => {
     {
       res.send({
         error: "ActivityExistsError",
-        name: "ActivityExistsError",
+        name: "Error",
         message: `Activity ${activityId} not found`,
       });
     }
