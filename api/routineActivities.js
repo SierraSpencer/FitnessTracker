@@ -15,25 +15,32 @@ router.patch("/:routineActivityId", requireUser, async (req, res, next) => {
   const { routineActivityId } = req.params;
   const { duration, count } = req.body;
 
-  try {
+  try 
+  {
     const routineActivity = await getRoutineActivityById(routineActivityId);
-    const routine = await getRoutineById(routineActivity.routineId);
+    const isOwner = await canEditRoutineActivity(
+      routineActivityId,
+      req.user.id
+    );
 
-    if (routine.creatorId !== req.user.id) {
+    if (!isOwner) 
+    {
       next({
-        name: "UnauthorizedUpdateError",
-        message: `User ${req.user.username} is not allowed to update ${routine.name}`,
+        name: 'AuthorizationHeaderError',
+        message: `User ${req.user.username} is not allowed to update ${routineActivity.name}`,
       });
-    } else {
+    } else 
+    {
       const updatedRoutineActivity = await updateRoutineActivity({
         id: routineActivityId,
         duration,
         count,
       });
 
-      res.send(updatedRoutineActivity);
+      res.status(200).json(updatedRoutineActivity);
     }
-  } catch (error) {
+  } catch (error) 
+  {
     next(error);
   }
 });
@@ -42,24 +49,27 @@ router.patch("/:routineActivityId", requireUser, async (req, res, next) => {
 router.delete("/:routineActivityId", requireUser, async (req, res, next) => {
   const { routineActivityId } = req.params;
 
-  try {
+  try 
+  {
     const routineActivity = await getRoutineActivityById(routineActivityId);
-    const routine = await getRoutineById(routineActivity.routineId);
-
-    if (routine.creatorId !== req.user.id) {
-      res.status(403).send({
-        error: "UnauthorizedUpdateError",
-        name: "UnauthorizedUpdateError",
-        message: `User ${req.user.username} is not allowed to delete ${routine.name}`,
-      });
-    } else {
-      const deleteRoutineActivity = await destroyRoutineActivity(
-        routineActivityId
+   const isOwner = await canEditRoutineActivity(
+        routineActivityId,
+        req.user.id
       );
 
-      res.send(deleteRoutineActivity);
+      if (!isOwner) 
+      {
+        res.status(403).json({
+          error: 'AuthorizationHeaderError',
+          message: `User ${req.user.username} is not allowed to delete ${routineActivity.name}`,
+          name: 'Error',
+        });
+      }
+
+      res.status(200).json(deletedRoutineActivity);
     }
-  } catch (error) {
+  } catch (error) 
+  {
     next(error);
   }
 });
